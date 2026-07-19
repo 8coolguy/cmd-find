@@ -1,0 +1,2 @@
+# This is NOT a .sh file — should be ignored by the scanner
+echo "i should not appear"

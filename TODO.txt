@@ -1,0 +1,11 @@
+Add support for optional flags in the config file.
+Double Check: Have an a LLM double check your work.
+Warning Messages on critical commands.
+Private commands that LLM can't see.
+Main argument for specifying which directory to search for commands in.
+Easy import/export.
+# Easy insert/delete.
+# Copy to buffer
+Website for documentation.
+Code Review.
+Release.
