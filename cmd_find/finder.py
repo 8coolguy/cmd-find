@@ -187,7 +187,7 @@ def _render_screen(
     lines: List[str] = []
 
     # ── Header ──────────────────────────────────────────────────────────
-    header = "  \x1b[1;36mcmd-find\x1b[0m"
+    header = "  \x1b[1;36mcdfr\x1b[0m"
     counter = f"\x1b[90m({selected_idx + 1}/{total_matches})\x1b[0m" if total_matches else ""
     available = w - _visible_len(header) - _visible_len(counter) - 1
     if available < 1:
@@ -1037,7 +1037,7 @@ def run_finder(commands: List[Command], save_dir: Path) -> Command | None:
     """
     if not commands:
         sys.stdout.write("\x1b[H\x1b[J")
-        print("cmd-find: No commands found in configured directories.", file=sys.stderr)
+        print("cdfr: No commands found in configured directories.", file=sys.stderr)
         print(
             "Add .sh files to your command directories and try again.",
             file=sys.stderr,

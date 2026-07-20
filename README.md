@@ -1,8 +1,8 @@
-# cmd-find
+# cdfr
 
 **Fuzzy-find templated shell commands and paste them straight into your terminal.**
 
-You know the command exists, you just can't remember the exact flags. `cmd-find` lets you curate a personal library of shell one-liners in simple `.sh` files, then fuzzy-search them by description and drop the result onto your command line with one keystroke.
+You know the command exists, you just can't remember the exact flags. `cdfr` lets you curate a personal library of shell one-liners in simple `.sh` files, then fuzzy-search them by description and drop the result onto your command line with one keystroke.
 
 ![](https://img.shields.io/badge/python-3.8+-blue)
 ![](https://img.shields.io/badge/platform-linux%20|%20macOS-lightgrey)
@@ -15,6 +15,7 @@ You know the command exists, you just can't remember the exact flags. `cmd-find`
 - [Quick start](#quick-start)
 - [Usage](#usage)
   - [Shell integration (recommended)](#shell-integration-recommended)
+  - [MCP integration (AI models)](#mcp-integration-ai-models)
   - [Adding commands](#adding-commands)
   - [Deleting commands](#deleting-commands)
   - [Standalone mode](#standalone-mode)
@@ -47,16 +48,16 @@ pip install --user -e .
 ```
 
 The installer will:
-1. Install the `cmd-find` command globally (via `uv tool install` or `pip` as fallback)
-2. Create a default config at `~/.config/cmd-find/config.toml`
-3. Copy example commands to `~/.local/share/cmd-find/commands/`
+1. Install the `cdfr` command globally (via `uv tool install` or `pip` as fallback)
+2. Create a default config at `~/.config/cdfr/config.toml`
+3. Copy example commands to `~/.local/share/cdfr/commands/`
 
 No system packages are modified. No external dependencies — fzf is optional (the tool ships with its own built-in fuzzy finder).
 
 **Switching from pip to uv?** Just run:
 
 ```bash
-pip uninstall cmd-find -y
+pip uninstall cdfr -y
 uv tool install --editable .
 ```
 
@@ -66,19 +67,19 @@ uv tool install --editable .
 
 ```bash
 # 1. Create your first command template
-mkdir -p ~/.local/share/cmd-find/commands/git
+mkdir -p ~/.local/share/cdfr/commands/git
 
-cat > ~/.local/share/cmd-find/commands/git/amend-author.sh << 'EOF'
+cat > ~/.local/share/cdfr/commands/git/amend-author.sh << 'EOF'
 # Amend the author of the last commit
 # Tags: git, fix
 git commit --amend --author="New Name <email@example.com>"
 EOF
 
 # 2. Fuzzy-find and execute
-cmd-find --exec
+cdfr --exec
 
 # 3. Or just print it (for shell integration)
-cmd-find
+cdfr
 ```
 
 Type `amend` or `author` to narrow the list, press Enter — the command is printed (or executed with `--exec`).
@@ -93,17 +94,17 @@ Add **one** of these lines to your shell rc file, then open a new terminal:
 
 ```bash
 # Bash — add to ~/.bashrc
-source /path/to/cmd-find/shell/cmd-find.bash
+source /path/to/cmd-find/shell/cdfr.bash
 
 # Zsh  — add to ~/.zshrc
-source /path/to/cmd-find/shell/cmd-find.zsh
+source /path/to/cmd-find/shell/cdfr.zsh
 ```
 
-Now press **Ctrl+F** anywhere on the command line. The fuzzy finder opens. Type to filter, arrow keys to navigate, Enter to select. The command is pasted **at your cursor** — edit it further or press Enter to run.
+Now press **Ctrl+G** anywhere on the command line. The fuzzy finder opens. Type to filter, arrow keys to navigate, Enter to select. The command is pasted **at your cursor** — edit it further or press Enter to run.
 
 ```
-$ echo "before" █                    # Press Ctrl+F
-  ┌─ cmd-find ──────────────────────────┐
+$ echo "before" █                    # Press Ctrl+G
+  ┌─ cdfr ──────────────────────────────┐
   │  query: git reb                     │
   │──────────────────────────────────────│
   │> [git,rebase] Interactively...      │
@@ -112,6 +113,64 @@ $ echo "before" █                    # Press Ctrl+F
   │  ↑↓ nav  │ type filter  │ Ctrl+N new │
   └──────────────────────────────────────┘
 $ git rebase -i HEAD~3█echo "before"   # Command inserted at cursor
+```
+
+### MCP integration (AI models)
+
+cdfr ships with an **MCP server** so AI models (Claude Code, Claude Desktop, and other MCP-compatible clients) can search your command library directly.
+
+**What it enables** — instead of pressing Ctrl+G and fuzzy-searching yourself, ask Claude naturally: *"I need to undo my last commit but keep the changes"* — and Claude finds `git reset --soft HEAD~1` from your library and offers to run it.
+
+**Configure in Claude Code** — add to `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "cdfr": {
+      "command": "cdfr-mcp"
+    }
+  }
+}
+```
+
+Or if `cdfr-mcp` isn't on PATH yet, use the full module path:
+
+```json
+{
+  "mcpServers": {
+    "cdfr": {
+      "command": "python",
+      "args": ["-m", "cmd_find.mcp_server"]
+    }
+  }
+}
+```
+
+**Available tools:**
+
+| Tool | Description |
+|---|---|
+| `search_commands` | Fuzzy-search your library by description and tags. Returns ranked matches with command templates and parameter definitions. |
+| `list_commands` | List all commands, optionally filtered by path (e.g. `"git"` for `git/` directory). |
+| `get_command` | Get full details for one command by index — description, template, tags, `@param` definitions. |
+| `fill_command` | Fill in a parameterised command's `{{placeholders}}` and return the ready-to-run command. |
+
+**How it works** — the server implements the [Model Context Protocol](https://modelcontextprotocol.io) (JSON-RPC 2.0 over stdio). It reuses the same scanner and config as the CLI — your command library is the single source of truth whether you're pressing Ctrl+G or talking to an AI. No extra dependencies.
+
+```
+┌──────────────────┐     stdio JSON-RPC     ┌──────────────────────┐
+│  Claude / MCP    │ ◄───────────────────► │  cdfr-mcp            │
+│  client          │                        │                      │
+└──────────────────┘                        │  search_commands()   │
+                                            │  list_commands()     │
+                                            │  get_command()       │
+                                            │  fill_command()      │
+                                            └──────────────────────┘
+                                                      │
+                                              ┌───────┴───────┐
+                                              │  config.toml   │
+                                              │  .sh files     │
+                                              └───────────────┘
 ```
 
 ### Adding commands
@@ -152,31 +211,31 @@ Press **Ctrl+D** on any command to delete its `.sh` file permanently (with a con
 
 ```bash
 # Fuzzy-find and print the command to stdout
-cmd-find
+cdfr
 # → git rebase -i HEAD~3
 
 # Narrow down by path — only show commands under a git/ directory
-cmd-find git
-cmd-find docker
+cdfr git
+cdfr docker
 
 # Fuzzy-find and copy to clipboard
-cmd-find --copy
+cdfr --copy
 
 # Fuzzy-find and execute immediately (no shell integration needed)
-cmd-find --exec
+cdfr --exec
 
 # List all commands without interactive mode
-cmd-find --list
+cdfr --list
 ```
 
 ### CLI reference
 
 ```
-cmd-find [-h] [-c CONFIG] [--init] [--list] [--exec] [--copy] [filter]
+cdfr [-h] [-c CONFIG] [--init] [--list] [--exec] [--copy] [filter]
 
 Options:
   -h, --help            Show help
-  -c, --config PATH     Path to config file (default: ~/.config/cmd-find/config.toml)
+  -c, --config PATH     Path to config file (default: ~/.config/cdfr/config.toml)
   --init                Create a default config and commands directory, then exit
   --list                Print all discovered commands (no interactive mode)
   --exec                Execute the selected command via $SHELL (otherwise print it)
@@ -210,21 +269,21 @@ the actual one-liner shell command
 ### Examples
 
 ```bash
-# ── ~/.local/share/cmd-find/commands/git/undo-commit.sh ──
+# ── ~/.local/share/cdfr/commands/git/undo-commit.sh ──
 # Undo the last commit, keeping all changes staged
 # Tags: git, undo
 git reset --soft HEAD~1
 ```
 
 ```bash
-# ── ~/.local/share/cmd-find/commands/docker/cleanup.sh ──
+# ── ~/.local/share/cdfr/commands/docker/cleanup.sh ──
 # Remove all stopped containers, unused images, and dangling volumes
 # Tags: docker, cleanup
 docker system prune -af --volumes
 ```
 
 ```bash
-# ── ~/.local/share/cmd-find/commands/ssh/tunnel.sh ──
+# ── ~/.local/share/cdfr/commands/ssh/tunnel.sh ──
 # Create an SSH tunnel forwarding local port 5432 to remote postgres
 # Tags: ssh, postgres, tunnel
 ssh -L 5432:localhost:5432 user@db-host.example.com
@@ -235,7 +294,7 @@ ssh -L 5432:localhost:5432 user@db-host.example.com
 Directories are scanned recursively. Use subdirectories to group related commands:
 
 ```
-~/.local/share/cmd-find/commands/
+~/.local/share/cdfr/commands/
 ├── git/
 │   ├── new-branch.sh
 │   ├── squash-commits.sh
@@ -328,29 +387,29 @@ git reset --soft HEAD~1
 
 ## Configuration
 
-The config file lives at `~/.config/cmd-find/config.toml`:
+The config file lives at `~/.config/cdfr/config.toml`:
 
 ```toml
 # List directories containing .sh command templates.
 # Paths support ~ and $ENV_VAR expansion.
 
 directories = [
-    "~/.local/share/cmd-find/commands",
+    "~/.local/share/cdfr/commands",
     "~/work/team-scripts",
     "$PROJECT_DIR/oncall-runbooks",
 ]
 
 # Default output mode when no flag is given.
-#   "print" — output to stdout (for shell integration / Ctrl+F)
+#   "print" — output to stdout (for shell integration / Ctrl+G)
 #   "copy"  — copy to system clipboard
 #   "exec"  — execute immediately
 mode = "print"
 ```
 
-- Run `cmd-find --init` to create the default config.
+- Run `cdfr --init` to create the default config.
 - Directories that don't exist are silently skipped.
 - Duplicate directories are deduplicated (order is preserved).
-- Multiple config files: use `cmd-find -c /path/to/other-config.toml`.
+- Multiple config files: use `cdfr -c /path/to/other-config.toml`.
 - **Mode override:** `--exec`, `--copy`, and `--print` flags always take priority over the config `mode` setting.
 
 ---
@@ -371,6 +430,11 @@ mode = "print"
           ┌─────────────────┐                                         │
           │  stdout / exec   │◀────────────────────────────────────────┘
           └─────────────────┘
+
+┌──────────────┐     stdio JSON-RPC     ┌──────────────────────────────┐
+│  MCP client  │ ◄───────────────────► │  mcp_server                  │
+│  (Claude)    │                        │  search / list / get / fill  │
+└──────────────┘                        └──────────────────────────────┘
 ```
 
 **Config loader** (`config.py`) — reads the TOML file, expands `~` and `$ENV_VAR`, deduplicates paths. Falls back gracefully if no config exists.
@@ -400,13 +464,13 @@ No external process is spawned in built-in mode. The UI runs entirely in `sys.st
 The magic that pastes a command onto your command line:
 
 ```
-┌─ shell widget (Ctrl+F) ─────────────────────────────────────────┐
+┌─ shell widget (Ctrl+G) ─────────────────────────────────────────┐
 │                                                                  │
-│  1. User presses Ctrl+F                                         │
-│  2. Shell invokes cmd-find with stderr→tty, stdout→pipe          │
-│  3. cmd-find draws the TUI on /dev/tty                           │
+│  1. User presses Ctrl+G                                         │
+│  2. Shell invokes cdfr with stderr→tty, stdout→pipe          │
+│  3. cdfr draws the TUI on /dev/tty                           │
 │  4. User selects a command                                       │
-│  5. cmd-find prints the raw command text to stdout               │
+│  5. cdfr prints the raw command text to stdout               │
 │  6. Shell captures stdout into $result                           │
 │  7. READLINE_LINE / LBUFFER is set to $result + existing line    │
 │  8. Cursor is positioned after the inserted command              │

@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cmd-find"
+name = "cdfr"
 version = "1.0.0"
 description = "Fuzzy-find templated shell commands and paste them into your terminal"
 authors = [{ name = "Arnav" }]
@@ -16,7 +16,11 @@ classifiers = [
 ]
 
 [project.scripts]
-cmd-find = "cmd_find.main:main"
+cdfr = "cmd_find.main:main"
+cdfr-mcp = "cmd_find.mcp_server:run_server"
+
+[project.optional-dependencies]
+mcp = []  # placeholder — no extra deps needed; the server is pure stdlib
 
 [tool.setuptools.packages.find]
 include = ["cmd_find*"]

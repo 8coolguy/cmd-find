@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# ── cmd-find installer ──────────────────────────────────────────────────────
+# ── cdfr installer ──────────────────────────────────────────────────────────
 # Usage: ./install.sh
 #
 # This script:
-#  1. Installs the cmd-find CLI globally via uv (or pip as fallback)
-#  2. Creates a default config at ~/.config/cmd-find/config.toml
-#  3. Copies example commands to ~/.local/share/cmd-find/commands/
+#  1. Installs the cdfr CLI globally via uv (or pip as fallback)
+#  2. Creates a default config at ~/.config/cdfr/config.toml
+#  3. Copies example commands to ~/.local/share/cdfr/commands/
 #  4. Prints shell integration instructions
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_DIR="${HOME}/.local/share/cmd-find"
+INSTALL_DIR="${HOME}/.local/share/cdfr"
 COMMANDS_DIR="${INSTALL_DIR}/commands"
 
 echo "╔══════════════════════════════════════════╗"
-echo "║        cmd-find  —  installer           ║"
+echo "║        cdfr      —  installer           ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 
@@ -37,11 +37,11 @@ fi
 # ── 2. Ensure the command is on PATH ────────────────────────────────────────
 
 # uv tool install puts binaries in ~/.local/bin
-if ! command -v cmd-find &>/dev/null; then
+if ! command -v cdfr &>/dev/null; then
     # Try to locate it
-    if [[ -x "${HOME}/.local/bin/cmd-find" ]]; then
+    if [[ -x "${HOME}/.local/bin/cdfr" ]]; then
         export PATH="${HOME}/.local/bin:${PATH}"
-    elif [[ -x "${HOME}/.cargo/bin/cmd-find" ]]; then
+    elif [[ -x "${HOME}/.cargo/bin/cdfr" ]]; then
         export PATH="${HOME}/.cargo/bin:${PATH}"
     fi
 fi
@@ -49,7 +49,7 @@ fi
 # ── 3. Create default config ────────────────────────────────────────────────
 
 echo "→ Creating default config..."
-cmd-find --init 2>/dev/null || python3 -m cmd_find.main --init 2>/dev/null || true
+cdfr --init 2>/dev/null || python3 -m cmd_find.main --init 2>/dev/null || true
 
 # ── 4. Copy example commands ────────────────────────────────────────────────
 
@@ -70,17 +70,17 @@ echo ""
 echo "  Shell integration (pick one):"
 echo ""
 echo "  Bash — add to ~/.bashrc:"
-echo "    source ${SCRIPT_DIR}/shell/cmd-find.bash"
+echo "    source ${SCRIPT_DIR}/shell/cdfr.bash"
 echo ""
 echo "  Zsh  — add to ~/.zshrc:"
-echo "    source ${SCRIPT_DIR}/shell/cmd-find.zsh"
+echo "    source ${SCRIPT_DIR}/shell/cdfr.zsh"
 echo ""
-echo "  Then press Ctrl+F to fuzzy-find commands!"
+echo "  Then press Ctrl+G to fuzzy-find commands!"
 echo ""
 echo "  Or run directly:"
-echo "    cmd-find        # select and print command"
-echo "    cmd-find --exec # select and execute"
-echo "    cmd-find --list # list all commands"
+echo "    cdfr        # select and print command"
+echo "    cdfr --exec # select and execute"
+echo "    cdfr --list # list all commands"
 echo ""
-echo "  Config: ~/.config/cmd-find/config.toml"
+echo "  Config: ~/.config/cdfr/config.toml"
 echo "  Commands dir: $COMMANDS_DIR"

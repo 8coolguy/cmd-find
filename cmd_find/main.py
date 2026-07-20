@@ -1,4 +1,4 @@
-"""Entry point for the cmd-find CLI tool."""
+"""Entry point for the cdfr CLI tool."""
 
 import argparse
 import shutil
@@ -54,14 +54,14 @@ def _resolve_mode(args, config: Config) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="cmd-find",
+        prog="cdfr",
         description="Fuzzy-find templated shell commands from curated directories.",
     )
     parser.add_argument(
         "-c", "--config",
         type=Path,
         default=None,
-        help="Path to config file (default: ~/.config/cmd-find/config.toml)",
+        help="Path to config file (default: ~/.config/cdfr/config.toml)",
     )
     parser.add_argument(
         "--init",
@@ -110,12 +110,12 @@ def main() -> None:
 
     if not config.directories:
         print(
-            "cmd-find: No directories configured.",
+            "cdfr: No directories configured.",
             file=sys.stderr,
         )
         print(
-            f"Run 'cmd-find --init' to create a default config, or edit "
-            f"~/.config/cmd-find/config.toml",
+            f"Run 'cdfr --init' to create a default config, or edit "
+            f"~/.config/cdfr/config.toml",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -131,14 +131,14 @@ def main() -> None:
         ]
         if not commands:
             print(
-                f"cmd-find: No commands matched filter '{args.filter}'.",
+                f"cdfr: No commands matched filter '{args.filter}'.",
                 file=sys.stderr,
             )
             sys.exit(1)
 
     # Where to save new commands
     save_dir = config.directories[0] if config.directories else (
-        Path.home() / ".local" / "share" / "cmd-find" / "commands"
+        Path.home() / ".local" / "share" / "cdfr" / "commands"
     )
 
     if args.list:
@@ -180,7 +180,7 @@ def main() -> None:
             print(f"Copied: {final_command}", file=sys.stderr)
         else:
             print(
-                "cmd-find: No clipboard tool found. Install xclip, xsel, or wl-copy.",
+                "cdfr: No clipboard tool found. Install xclip, xsel, or wl-copy.",
                 file=sys.stderr,
             )
             print(final_command)

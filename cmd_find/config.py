@@ -1,4 +1,4 @@
-"""Configuration handling for cmd-find."""
+"""Configuration handling for cdfr."""
 
 import os
 import tomllib
@@ -11,12 +11,12 @@ OutputMode = Literal["print", "copy", "exec"]
 
 @dataclass
 class Config:
-    """Parsed cmd-find configuration."""
+    """Parsed cdfr configuration."""
     directories: List[Path] = field(default_factory=list)
     mode: OutputMode = "print"
 
 
-DEFAULT_CONFIG_PATH = Path.home() / ".config" / "cmd-find" / "config.toml"
+DEFAULT_CONFIG_PATH = Path.home() / ".config" / "cdfr" / "config.toml"
 
 
 def _expand(path_str: str) -> Path:
@@ -60,10 +60,10 @@ def create_default_config(path: Path | None = None) -> Path:
     target = path or DEFAULT_CONFIG_PATH
     target.parent.mkdir(parents=True, exist_ok=True)
 
-    default_dir = Path.home() / ".local" / "share" / "cmd-find" / "commands"
+    default_dir = Path.home() / ".local" / "share" / "cdfr" / "commands"
     default_dir.mkdir(parents=True, exist_ok=True)
 
-    content = f'''# cmd-find configuration
+    content = f'''# cdfr configuration
 # List directories containing your templated .sh command files.
 # Paths support ~ and $ENV_VAR expansion.
 
